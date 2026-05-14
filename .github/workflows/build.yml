@@ -8,17 +8,33 @@ on:
 jobs:
   build-windows:
     runs-on: windows-latest
+
     steps:
-    - uses: actions/checkout@v4
-    - uses: actions/setup-python@v5
-      with:
-        python-version: '3.11'
-    - name: Install dependencies
-      run: pip install PyQt5 playwright PySocks requests pyinstaller
-    - name: Build EXE
-      run: pyinstaller --onefile --windowed --name="TrafficForge" --hidden-import=PyQt5 --hidden-import=socks main.py
-    - name: Upload EXE
-      uses: actions/upload-artifact@v4
-      with:
-        name: TrafficForge-Windows
-        path: dist/TrafficForge.exe
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install build tools
+        run: pip install pyinstaller
+
+      - name: Build Launcher EXE
+        run: |
+          pyinstaller --onefile --windowed ^
+            --name="TrafficForge" ^
+            --hidden-import=tkinter ^
+            --hidden-import=tkinter.ttk ^
+            launcher.py
+
+      - name: Package with main.py
+        run: |
+          mkdir release
+          copy dist\TrafficForge.exe release\TrafficForge.exe
+          copy main.py release\main.py
+
+      - name: Upload Package
+        uses: actions/upload-artifact@v4
+        with:
+          name: TrafficForge-Windows
+          path: release\
