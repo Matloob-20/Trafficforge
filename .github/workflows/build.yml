@@ -1,0 +1,24 @@
+name: Build Windows EXE
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  build-windows:
+    runs-on: windows-latest
+    steps:
+    - uses: actions/checkout@v4
+    - uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+    - name: Install dependencies
+      run: pip install PyQt5 playwright PySocks requests pyinstaller
+    - name: Build EXE
+      run: pyinstaller --onefile --windowed --name="TrafficForge" --hidden-import=PyQt5 --hidden-import=socks main.py
+    - name: Upload EXE
+      uses: actions/upload-artifact@v4
+      with:
+        name: TrafficForge-Windows
+        path: dist/TrafficForge.exe
