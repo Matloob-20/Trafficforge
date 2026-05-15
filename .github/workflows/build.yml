@@ -7,34 +7,73 @@ on:
 
 jobs:
   build-windows:
-    runs-on: windows-latest
+    runs-on: windows-2025
 
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout
+        uses: actions/checkout@v4
 
-      - uses: actions/setup-python@v5
+      - name: Setup Python 3.11
+        uses: actions/setup-python@v5
         with:
           python-version: '3.11'
 
       - name: Install build tools
-        run: pip install pyinstaller
+        run: pip install pyinstaller pyinstaller-hooks-contrib
 
-      - name: Build Launcher EXE
+      - name: Install all dependencies into build env
+        run: pip install PyQt5 playwright PySocks requests
+
+      - name: Build EXE with all deps bundled
+        run: pyinstaller --onefile --windowed --name="TrafficForge" --hidden-import=tkinter --hidden-import=tkinter.ttk --hidden-import=PyQt5 --hidden-import=PyQt5.QtCore --hidden-import=PyQt5.QtGui --hidden-import=PyQt5.QtWidgets --hidden-import=socks --hidden-import=requests --hidden-import=playwright --collect-all PyQt5 launcher.py
+
+      - name: Install NSIS
+        run: choco install nsis -y --no-progress
+
+      - name: Create installer script
+        shell: pwsh
         run: |
-          pyinstaller --onefile --windowed ^
-            --name="TrafficForge" ^
-            --hidden-import=tkinter ^
-            --hidden-import=tkinter.ttk ^
-            launcher.py
+          $nsis = @'
+          !include "MUI2.nsh"
+          Name "TrafficForge v4.0"
+          OutFile "TrafficForge_Setup.exe"
+          InstallDir "$PROGRAMFILES\TrafficForge"
+          RequestExecutionLevel admin
+          !insertmacro MUI_PAGE_WELCOME
+          !insertmacro MUI_PAGE_DIRECTORY
+          !insertmacro MUI_PAGE_INSTFILES
+          !insertmacro MUI_PAGE_FINISH
+          !insertmacro MUI_LANGUAGE "English"
+          Section "Install"
+            SetOutPath "$INSTDIR"
+            File "dist\TrafficForge.exe"
+            File "main.py"
+            CreateShortcut "$DESKTOP\TrafficForge.lnk" "$INSTDIR\TrafficForge.exe"
+            CreateShortcut "$SMPROGRAMS\TrafficForge.lnk" "$INSTDIR\TrafficForge.exe"
+            WriteUninstaller "$INSTDIR\Uninstall.exe"
+            WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\TrafficForge" "DisplayName" "TrafficForge v4.0"
+            WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\TrafficForge" "UninstallString" "$INSTDIR\Uninstall.exe"
+          SectionEnd
+          Section "Uninstall"
+            Delete "$INSTDIR\TrafficForge.exe"
+            Delete "$INSTDIR\main.py"
+            Delete "$INSTDIR\Uninstall.exe"
+            Delete "$DESKTOP\TrafficForge.lnk"
+            Delete "$SMPROGRAMS\TrafficForge.lnk"
+            RMDir "$INSTDIR"
+            DeleteRegKey HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\TrafficForge"
+          SectionEnd
+          '@
+          $nsis | Out-File -FilePath installer.nsi -Encoding UTF8
 
-      - name: Package with main.py
+      - name: Build Installer
+        shell: pwsh
         run: |
-          mkdir release
-          copy dist\TrafficForge.exe release\TrafficForge.exe
-          copy main.py release\main.py
+          $env:PATH = "C:\Program Files (x86)\NSIS;$env:PATH"
+          makensis installer.nsi
 
-      - name: Upload Package
+      - name: Upload Installer
         uses: actions/upload-artifact@v4
         with:
-          name: TrafficForge-Windows
-          path: release\
+          name: TrafficForge-Setup
+          path: TrafficForge_Setup.exe

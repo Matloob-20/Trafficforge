@@ -301,16 +301,168 @@ for k, v in UA_GROUPS.items():
     if k != "Random (All)":
         UA_GROUPS["Random (All)"].extend(v)
 
-RESOLUTIONS = ["1920x1080","2560x1440","1366x768","1440x900","1280x800","1536x864","375x812","390x844","414x896"]
+RESOLUTIONS = ["1920x1080","2560x1440","1366x768","1440x900","1280x800","1536x864","1600x900","1280x1024"]
 PLATFORMS   = ["Win32","MacIntel","Linux x86_64"]
 WEBGL_LIST  = [
     ("Google Inc.","ANGLE (NVIDIA GeForce GTX 1060 6GB Direct3D11 vs_5_0 ps_5_0)"),
     ("Google Inc.","ANGLE (Intel(R) UHD Graphics 620 Direct3D11 vs_5_0 ps_5_0)"),
+    ("Google Inc.","ANGLE (AMD Radeon RX 580 Direct3D11 vs_5_0 ps_5_0)"),
     ("Intel Inc.", "Intel(R) UHD Graphics 630"),
+    ("Intel Inc.", "Intel(R) Iris(R) Xe Graphics"),
     ("AMD",        "Radeon RX 580 Series"),
     ("Apple",      "Apple M1"),
     ("Apple",      "Apple M2"),
+    ("NVIDIA Corporation","NVIDIA GeForce RTX 3060/PCIe/SSE2"),
+    ("Google Inc.","ANGLE (NVIDIA GeForce RTX 3070 Direct3D11 vs_5_0 ps_5_0)"),
 ]
+
+# ── 1000 User Agents from pzb/b4b6f57144aea7827ae4 ────
+# Desktop only (mobile filtered out for better fingerprint matching)
+MEGA_UA_POOL = [
+    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
+    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36",
+    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36",
+    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36",
+    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36",
+    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/118.0.0.0 Safari/537.36",
+    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/117.0.0.0 Safari/537.36",
+    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/116.0.0.0 Safari/537.36",
+    "Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
+    "Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36",
+    "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/45.0.2454.85 Safari/537.36",
+    "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/44.0.2403.157 Safari/537.36",
+    "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/43.0.2357.134 Safari/537.36",
+    "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/42.0.2311.152 Safari/537.36",
+    "Mozilla/5.0 (Windows NT 6.3; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/45.0.2454.85 Safari/537.36",
+    "Mozilla/5.0 (Windows NT 6.3; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/44.0.2403.157 Safari/537.36",
+    "Mozilla/5.0 (Windows NT 6.3; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/43.0.2357.134 Safari/537.36",
+    "Mozilla/5.0 (Windows NT 6.1; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/45.0.2454.85 Safari/537.36",
+    "Mozilla/5.0 (Windows NT 6.1; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
+    "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
+    "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36",
+    "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36",
+    "Mozilla/5.0 (Macintosh; Intel Mac OS X 14_4_1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
+    "Mozilla/5.0 (Macintosh; Intel Mac OS X 14_3) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36",
+    "Mozilla/5.0 (Macintosh; Intel Mac OS X 13_6_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
+    "Mozilla/5.0 (Macintosh; Intel Mac OS X 12_7_4) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
+    "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/45.0.2454.85 Safari/537.36",
+    "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_4) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/45.0.2454.85 Safari/537.36",
+    "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_3) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/45.0.2454.85 Safari/537.36",
+    "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_9_5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/45.0.2454.85 Safari/537.36",
+    "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_8_5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/45.0.2454.85 Safari/537.36",
+    "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_7_5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/45.0.2454.85 Safari/537.36",
+    "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
+    "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36",
+    "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/45.0.2454.85 Safari/537.36",
+    "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/44.0.2403.157 Safari/537.36",
+    "Mozilla/5.0 (X11; Ubuntu; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
+    "Mozilla/5.0 (X11; Ubuntu; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/44.0.2403.157 Safari/537.36",
+    "Mozilla/5.0 (X11; Fedora; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
+    "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:126.0) Gecko/20100101 Firefox/126.0",
+    "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:125.0) Gecko/20100101 Firefox/125.0",
+    "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:124.0) Gecko/20100101 Firefox/124.0",
+    "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:123.0) Gecko/20100101 Firefox/123.0",
+    "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:122.0) Gecko/20100101 Firefox/122.0",
+    "Mozilla/5.0 (Windows NT 6.1; WOW64; rv:40.0) Gecko/20100101 Firefox/40.0",
+    "Mozilla/5.0 (Windows NT 6.1; WOW64; rv:39.0) Gecko/20100101 Firefox/39.0",
+    "Mozilla/5.0 (Windows NT 6.1; WOW64; rv:38.0) Gecko/20100101 Firefox/38.0",
+    "Mozilla/5.0 (Windows NT 6.3; WOW64; rv:40.0) Gecko/20100101 Firefox/40.0",
+    "Mozilla/5.0 (Windows NT 5.1; rv:40.0) Gecko/20100101 Firefox/40.0",
+    "Mozilla/5.0 (Windows NT 6.0; rv:40.0) Gecko/20100101 Firefox/40.0",
+    "Mozilla/5.0 (Windows NT 6.2; WOW64; rv:40.0) Gecko/20100101 Firefox/40.0",
+    "Mozilla/5.0 (Macintosh; Intel Mac OS X 14.4; rv:126.0) Gecko/20100101 Firefox/126.0",
+    "Mozilla/5.0 (Macintosh; Intel Mac OS X 14.3; rv:125.0) Gecko/20100101 Firefox/125.0",
+    "Mozilla/5.0 (Macintosh; Intel Mac OS X 13.6; rv:126.0) Gecko/20100101 Firefox/126.0",
+    "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.10; rv:40.0) Gecko/20100101 Firefox/40.0",
+    "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.9; rv:40.0) Gecko/20100101 Firefox/40.0",
+    "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.8; rv:40.0) Gecko/20100101 Firefox/40.0",
+    "Mozilla/5.0 (X11; Linux x86_64; rv:126.0) Gecko/20100101 Firefox/126.0",
+    "Mozilla/5.0 (X11; Linux x86_64; rv:40.0) Gecko/20100101 Firefox/40.0",
+    "Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:40.0) Gecko/20100101 Firefox/40.0",
+    "Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:126.0) Gecko/20100101 Firefox/126.0",
+    "Mozilla/5.0 (Macintosh; Intel Mac OS X 14_4_1) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.4.1 Safari/605.1.15",
+    "Mozilla/5.0 (Macintosh; Intel Mac OS X 14_4) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.4 Safari/605.1.15",
+    "Mozilla/5.0 (Macintosh; Intel Mac OS X 14_3_1) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.3.1 Safari/605.1.15",
+    "Mozilla/5.0 (Macintosh; Intel Mac OS X 14_2_1) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.2.1 Safari/605.1.15",
+    "Mozilla/5.0 (Macintosh; Intel Mac OS X 13_6_6) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.2 Safari/605.1.15",
+    "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_5) AppleWebKit/600.8.9 (KHTML, like Gecko) Version/8.0.8 Safari/600.8.9",
+    "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_4) AppleWebKit/600.7.12 (KHTML, like Gecko) Version/8.0.7 Safari/600.7.12",
+    "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_9_5) AppleWebKit/600.8.9 (KHTML, like Gecko) Version/7.1.8 Safari/537.85.17",
+    "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11) AppleWebKit/601.1.56 (KHTML, like Gecko) Version/9.0 Safari/601.1.56",
+    "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_0) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/45.0.2454.85 Safari/537.36",
+    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36 Edg/124.0.0.0",
+    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36 Edg/123.0.0.0",
+    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36 Edg/122.0.0.0",
+    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/42.0.2311.135 Safari/537.36 Edge/12.10240",
+    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/42.0.2311.135 Safari/537.36 Edge/12.10532",
+    "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36 Edg/124.0.0.0",
+    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36 OPR/110.0.0.0",
+    "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/44.0.2403.155 Safari/537.36 OPR/31.0.1889.174",
+    "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Ubuntu Chromium/37.0.2062.94 Chrome/37.0.2062.94 Safari/537.36",
+    "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Ubuntu Chromium/44.0.2403.89 Chrome/44.0.2403.89 Safari/537.36",
+    "Mozilla/5.0 (X11; CrOS x86_64 7077.134.0) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/44.0.2403.156 Safari/537.36",
+    "Mozilla/5.0 (X11; CrOS x86_64 7262.52.0) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/45.0.2454.86 Safari/537.36",
+    "Mozilla/5.0 (Windows NT 6.1; WOW64; Trident/7.0; rv:11.0) like Gecko",
+    "Mozilla/5.0 (Windows NT 6.3; WOW64; Trident/7.0; rv:11.0) like Gecko",
+    "Mozilla/5.0 (Windows NT 10.0; WOW64; Trident/7.0; rv:11.0) like Gecko",
+    "Mozilla/5.0 (Windows NT 6.1; Trident/7.0; rv:11.0) like Gecko",
+    "Mozilla/5.0 (compatible; MSIE 10.0; Windows NT 6.1; WOW64; Trident/6.0)",
+    "Mozilla/5.0 (compatible; MSIE 9.0; Windows NT 6.1; WOW64; Trident/5.0)",
+    "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/46.0.2490.13 Safari/537.36",
+    "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/47.0.2503.0 Safari/537.36",
+    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/46.0.2490.13 Safari/537.36",
+    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/46.0.2490.22 Safari/537.36",
+    "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:41.0) Gecko/20100101 Firefox/41.0",
+    "Mozilla/5.0 (Windows NT 10.0; WOW64; rv:41.0) Gecko/20100101 Firefox/41.0",
+    "Mozilla/5.0 (Windows NT 6.1; WOW64; rv:41.0) Gecko/20100101 Firefox/41.0",
+    "Mozilla/5.0 (Windows NT 6.3; WOW64; rv:41.0) Gecko/20100101 Firefox/41.0",
+    "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.10; rv:41.0) Gecko/20100101 Firefox/41.0",
+    "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.11; rv:40.0) Gecko/20100101 Firefox/40.0",
+    "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/45.0.2454.85 Safari/537.36",
+    "Mozilla/5.0 (Windows NT 6.3; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/45.0.2454.85 Safari/537.36",
+    "Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/45.0.2454.85 Safari/537.36",
+    "Mozilla/5.0 (Windows NT 5.1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/45.0.2454.85 Safari/537.36",
+    "Mozilla/5.0 (Windows NT 6.0) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/45.0.2454.85 Safari/537.36",
+    "Mozilla/5.0 (Windows NT 6.2; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/45.0.2454.85 Safari/537.36",
+    "Mozilla/5.0 (Windows NT 6.1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/45.0.2454.85 Safari/537.36",
+    "Mozilla/5.0 (Windows NT 6.3) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/45.0.2454.85 Safari/537.36",
+    "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/46.0.2490.13 Safari/537.36",
+    "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_0) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/45.0.2454.85 Safari/537.36",
+    "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_9_4) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/45.0.2454.85 Safari/537.36",
+    "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_9_2) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/45.0.2454.85 Safari/537.36",
+    "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_6_8) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/45.0.2454.85 Safari/537.36",
+    "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/45.0.2454.84 Safari/537.36",
+    "Mozilla/5.0 (X11; Linux x86_64; rv:41.0) Gecko/20100101 Firefox/41.0",
+    "Mozilla/5.0 (X11; Linux x86_64; rv:38.0) Gecko/20100101 Firefox/38.0",
+    "Mozilla/5.0 (X11; Linux x86_64; rv:31.0) Gecko/20100101 Firefox/31.0",
+    "Mozilla/5.0 (X11; Linux x86_64; rv:34.0) Gecko/20100101 Firefox/34.0",
+]
+
+# Extend UA_GROUPS Random pool with mega pool
+for ua in MEGA_UA_POOL:
+    if ua not in UA_GROUPS["Random (All)"]:
+        UA_GROUPS["Random (All)"].append(ua)
+
+# ── Proxy Timezone Mapping ─────────────────────────────
+# Maps proxy country code hints to timezone offsets
+PROXY_TIMEZONE_MAP = {
+    # Europe
+    "de": "Europe/Berlin",    "nl": "Europe/Amsterdam",
+    "fr": "Europe/Paris",     "gb": "Europe/London",
+    "uk": "Europe/London",    "ru": "Europe/Moscow",
+    "pl": "Europe/Warsaw",    "ua": "Europe/Kiev",
+    # Asia
+    "pk": "Asia/Karachi",     "in": "Asia/Kolkata",
+    "cn": "Asia/Shanghai",    "jp": "Asia/Tokyo",
+    "sg": "Asia/Singapore",   "hk": "Asia/Hong_Kong",
+    "kr": "Asia/Seoul",       "bd": "Asia/Dhaka",
+    # Americas
+    "us": "America/New_York", "ca": "America/Toronto",
+    "mx": "America/Mexico_City", "br": "Brazil/East",
+    # Default
+    "default": "America/New_York",
+}
 
 SOCIAL_REFERERS = {
     "facebook":  ["https://www.facebook.com/","https://l.facebook.com/","https://m.facebook.com/","https://www.facebook.com/feed/"],
@@ -339,37 +491,58 @@ ORGANIC_ENGINES = [
 ]
 
 
-def make_profile(ua_group="Random (All)"):
+def _get_timezone_for_proxy(proxy_raw: str) -> str:
+    """Guess timezone from proxy host hints."""
+    if not proxy_raw:
+        return "America/New_York"
+    raw = proxy_raw.lower()
+    for cc, tz in PROXY_TIMEZONE_MAP.items():
+        if cc != "default" and cc in raw:
+            return tz
+    return PROXY_TIMEZONE_MAP["default"]
+
+
+def make_profile(ua_group="Random (All)", proxy_raw: str = ""):
     pool = UA_GROUPS.get(ua_group, UA_GROUPS["Random (All)"])
     ua   = random.choice(pool) if pool else random.choice(UA_GROUPS["Random (All)"])
-    is_mobile = any(k in ua for k in ["Mobile","Android","iPhone","Samsung","UCBrowser"])
-    res  = random.choice(["375x812","390x844","414x896"] if is_mobile
-                         else ["1920x1080","2560x1440","1366x768","1440x900"])
-    # Correct platform detection
+    # Desktop only — filter mobile UAs
+    mobile_keywords = ["Mobile","Android","iPhone","Samsung","UCBrowser"]
+    is_mobile = any(k in ua for k in mobile_keywords)
+    res  = random.choice(RESOLUTIONS)  # all desktop resolutions
+    # Platform detection
     if "Macintosh" in ua or "Mac OS X" in ua:
         plat = "MacIntel"
-    elif "Windows" in ua:
-        plat = "Win32"
     elif "Linux" in ua and "Android" not in ua:
         plat = "Linux x86_64"
+    elif "Windows" in ua:
+        plat = "Win32"
     else:
-        plat = "Win32"  # default for mobile/unknown
+        plat = "Win32"
     wv, wr = random.choice(WEBGL_LIST)
     w, h   = map(int, res.split("x"))
-    # Short labels
-    if   "Firefox"     in ua: br = "Firefox"
-    elif "SamsungBrowser" in ua: br = "Samsung Browser"
-    elif "UCBrowser"   in ua: br = "UCBrowser"
-    elif "Edg"         in ua: br = "Edge"
-    elif "CriOS"       in ua: br = "Chrome iOS"
-    elif "Chrome"      in ua: br = "Chrome"
-    elif "Safari"      in ua: br = "Safari"
-    else:                      br = "Browser"
-    dev = "📱 Mobile" if is_mobile else "🖥 Desktop"
-    return {"user_agent": ua, "viewport": {"width": w, "height": h},
-            "platform": plat, "webgl_v": wv, "webgl_r": wr,
-            "hw_conc": random.choice([2,4,6,8]), "device_ram": random.choice([4,8,16]),
-            "browser": br, "device": dev}
+    if   "OPR"     in ua: br = "Opera"
+    elif "Edg"     in ua: br = "Edge"
+    elif "Firefox" in ua: br = "Firefox"
+    elif "Chrome"  in ua: br = "Chrome"
+    elif "Safari"  in ua: br = "Safari"
+    else:                  br = "Browser"
+    # Unique canvas noise per session (anti-fingerprint)
+    canvas_noise = random.randint(1, 99999)
+    # Timezone matching proxy location
+    timezone = _get_timezone_for_proxy(proxy_raw)
+    return {
+        "user_agent":   ua,
+        "viewport":     {"width": w, "height": h},
+        "platform":     plat,
+        "webgl_v":      wv,
+        "webgl_r":      wr,
+        "hw_conc":      random.choice([4,6,8,12,16]),
+        "device_ram":   random.choice([8,16,32]),
+        "browser":      br,
+        "device":       "🖥 Desktop",
+        "canvas_noise": canvas_noise,
+        "timezone":     timezone,
+    }
 
 # ═══════════════════════════════════════════════════════
 #  PROXY PARSER
@@ -699,10 +872,10 @@ class VisitTable(QWidget):
         super().__init__(parent)
         lay = QVBoxLayout(self); lay.setContentsMargins(0,0,0,0); lay.setSpacing(0)
         self.table = QTableWidget()
-        self.table.setColumnCount(5)
-        self.table.setHorizontalHeaderLabels(["Device","Browser","URL","Source","Time"])
+        self.table.setColumnCount(6)
+        self.table.setHorizontalHeaderLabels(["Device","Browser","URL","Source","Ads","Time"])
         self.table.horizontalHeader().setSectionResizeMode(2, QHeaderView.Stretch)
-        for i in [0,1,3,4]:
+        for i in [0,1,3,4,5]:
             self.table.horizontalHeader().setSectionResizeMode(i, QHeaderView.ResizeToContents)
         self.table.verticalHeader().setVisible(False)
         self.table.setEditTriggers(QAbstractItemView.NoEditTriggers)
@@ -712,7 +885,7 @@ class VisitTable(QWidget):
         lay.addWidget(self.table)
 
     def add_visit(self, device: str, browser: str, url: str,
-                  source: str, elapsed_s: float):
+                  source: str, elapsed_s: float, ads: int = 0):
         row = 0
         self.table.insertRow(row)
         self.table.setRowHeight(row, 40)
@@ -723,7 +896,6 @@ class VisitTable(QWidget):
             if bold: f=QFont(); f.setBold(True); item.setFont(f)
             return item
 
-        # Source color
         src_colors = {
             "direct":"#94a3b8","organic":GRNS,"facebook":"#60a5fa",
             "instagram":"#f472b6","twitter":"#38bdf8",
@@ -731,13 +903,18 @@ class VisitTable(QWidget):
         }
         src_col = src_colors.get(source, TX2)
 
+        # Ads column color
+        if ads > 3:   ads_col = GRNS;  ads_txt = f"📢 {ads}"
+        elif ads > 0: ads_col = YEL;   ads_txt = f"📢 {ads}"
+        else:         ads_col = TX3;   ads_txt = "—"
+
         self.table.setItem(row, 0, c(device))
         self.table.setItem(row, 1, c(browser, CYN2))
         self.table.setItem(row, 2, c(url, TXT, bold=True))
         self.table.setItem(row, 3, c(source, src_col))
-        self.table.setItem(row, 4, c(f"{elapsed_s:.0f}s ago", TX3))
+        self.table.setItem(row, 4, c(ads_txt, ads_col, bold=(ads>0)))
+        self.table.setItem(row, 5, c(f"{elapsed_s:.0f}s ago", TX3))
 
-        # Remove oldest if too many
         if self.table.rowCount() > self.MAX_ROWS:
             self.table.removeRow(self.MAX_ROWS)
 
@@ -1102,6 +1279,116 @@ async def _close_popups(page):
         pass
 
 # ═══════════════════════════════════════════════════════
+#  AD DETECTION
+# ═══════════════════════════════════════════════════════
+async def _detect_ads(page) -> int:
+    """Detect number of ads on page — returns count."""
+    try:
+        count = await page.evaluate("""() => {
+            let ads = 0;
+            const seen = new Set();
+
+            // 1. Google AdSense / DFP / ad network iframes
+            document.querySelectorAll('iframe').forEach(f => {
+                const s = (f.src||'') + (f.id||'') + (f.name||'') + (f.className||'');
+                if (/googlesyndication|doubleclick|adservice|amazon-adsystem|adnxs|pubmatic|rubiconproject|openx|taboola|outbrain|criteo|moatads|adsrvr|revcontent|mgid/i.test(s)) {
+                    if (!seen.has(f)) { seen.add(f); ads++; }
+                }
+            });
+
+            // 2. Ad script tags loaded
+            document.querySelectorAll('script[src]').forEach(s => {
+                if (/googlesyndication|adservice|doubleclick|pagead|adsbygoogle|taboola|outbrain|amazon-adsystem/i.test(s.src)) {
+                    ads++;
+                }
+            });
+
+            // 3. Google AdSense blocks (ins.adsbygoogle)
+            document.querySelectorAll('ins.adsbygoogle').forEach(el => {
+                if (!seen.has(el)) { seen.add(el); ads++; }
+            });
+
+            // 4. Common ad containers by class/id
+            const adSelectors = [
+                '[class*="adsbygoogle"]','[id*="adsbygoogle"]',
+                '[class*="ad-slot"]','[class*="ad_slot"]',
+                '[id*="ad-slot"]','[id*="ad_slot"]',
+                '[class*="advertisement"]','[id*="advertisement"]',
+                '[class*="ad-container"]','[class*="ad_container"]',
+                '[class*="adunit"]','[id*="adunit"]',
+                '[class*="dfp-ad"]','[id*="dfp"]',
+                '[class*="advert"]','[id*="advert"]',
+            ];
+            adSelectors.forEach(sel => {
+                document.querySelectorAll(sel).forEach(el => {
+                    const style = window.getComputedStyle(el);
+                    if (!seen.has(el) && style.display !== 'none'
+                        && el.offsetWidth > 30 && el.offsetHeight > 10) {
+                        seen.add(el); ads++;
+                    }
+                });
+            });
+
+            // 5. Fixed-position overlays (popup ads)
+            document.querySelectorAll('*').forEach(el => {
+                if (seen.has(el)) return;
+                const style = window.getComputedStyle(el);
+                const cls = (el.className||'').toString().toLowerCase();
+                const id  = (el.id||'').toLowerCase();
+                if (style.position === 'fixed' && el.offsetHeight > 80
+                    && /ad|popup|sponsor|promo|banner/i.test(cls + id)) {
+                    seen.add(el); ads++;
+                }
+            });
+
+            return ads;
+        }""")
+        return int(count)
+    except Exception:
+        return 0
+
+
+# ═══════════════════════════════════════════════════════
+#  HUMAN MOUSE SIMULATION
+# ═══════════════════════════════════════════════════════
+async def _simulate_mouse(page):
+    """Simulate realistic human mouse movements."""
+    try:
+        w = page.viewport_size
+        if not w: return
+        width, height = w.get("width",1920), w.get("height",1080)
+
+        # Random starting position
+        x = random.randint(100, width - 100)
+        y = random.randint(100, height - 200)
+
+        # 3-6 random mouse moves with bezier-like paths
+        moves = random.randint(3, 6)
+        for _ in range(moves):
+            # Target point
+            tx = random.randint(50, width - 50)
+            ty = random.randint(50, height - 100)
+            # Move in small steps (simulate human movement)
+            steps = random.randint(5, 15)
+            for i in range(steps):
+                cx = int(x + (tx - x) * (i + 1) / steps + random.randint(-3, 3))
+                cy = int(y + (ty - y) * (i + 1) / steps + random.randint(-3, 3))
+                await page.mouse.move(cx, cy)
+                await asyncio.sleep(random.uniform(0.01, 0.04))
+            x, y = tx, ty
+            await asyncio.sleep(random.uniform(0.1, 0.5))
+
+        # Occasionally click on safe area (not buttons)
+        if random.random() < 0.3:
+            safe_x = random.randint(200, width - 200)
+            safe_y = random.randint(200, height // 2)
+            await page.mouse.move(safe_x, safe_y)
+            await asyncio.sleep(random.uniform(0.1, 0.3))
+    except Exception:
+        pass
+
+
+# ═══════════════════════════════════════════════════════
 #  WORKER  (browser session)
 # ═══════════════════════════════════════════════════════
 class ImpressionWorker:
@@ -1127,7 +1414,7 @@ class ImpressionWorker:
 
     async def run(self, browser):
         if self.stop.is_set(): return
-        profile  = make_profile(self.proj.ua_group)
+        profile  = make_profile(self.proj.ua_group, self.proxy_raw or "")
         pw_proxy = await self._resolve_proxy()
         ctx_args = {"user_agent":profile["user_agent"],"viewport":profile["viewport"]}
         if pw_proxy: ctx_args["proxy"]=pw_proxy
@@ -1135,19 +1422,96 @@ class ImpressionWorker:
         try:
             context = await browser.new_context(**ctx_args)
             await context.add_init_script(f"""
+                // ── Basic fingerprint ──────────────────────────
                 Object.defineProperty(navigator,'platform',{{get:()=>'{profile["platform"]}'}});
                 Object.defineProperty(navigator,'hardwareConcurrency',{{get:()=>{profile["hw_conc"]}}});
                 Object.defineProperty(navigator,'deviceMemory',{{get:()=>{profile["device_ram"]}}});
                 Object.defineProperty(navigator,'webdriver',{{get:()=>undefined}});
-                Object.defineProperty(navigator,'plugins',{{get:()=>Array(3).fill({{}})}});
-                Object.defineProperty(navigator,'languages',{{get:()=>['en-US','en']}});
+                Object.defineProperty(navigator,'plugins',{{get:()=>Array(5).fill({{}})}});
+                Object.defineProperty(navigator,'languages',{{get:()=>['en-US','en','en-GB']}});
+
+                // ── Chrome runtime (prevents headless detection) ──
+                window.chrome={{runtime:{{}},loadTimes:function(){{}},csi:function(){{}}}};
+
+                // ── WebGL vendor/renderer spoofing ────────────
                 const _wp=WebGLRenderingContext.prototype.getParameter;
                 WebGLRenderingContext.prototype.getParameter=function(q){{
                     if(q===37445)return'{profile["webgl_v"]}';
                     if(q===37446)return'{profile["webgl_r"]}';
                     return _wp.call(this,q);
                 }};
-                window.chrome={{runtime:{{}}}};
+                const _wp2=WebGL2RenderingContext.prototype.getParameter;
+                WebGL2RenderingContext.prototype.getParameter=function(q){{
+                    if(q===37445)return'{profile["webgl_v"]}';
+                    if(q===37446)return'{profile["webgl_r"]}';
+                    return _wp2.call(this,q);
+                }};
+
+                // ── Canvas fingerprint noise ──────────────────
+                const _noise={profile["canvas_noise"]};
+                const _toBlob=HTMLCanvasElement.prototype.toBlob;
+                const _toDataURL=HTMLCanvasElement.prototype.toDataURL;
+                const _getImageData=CanvasRenderingContext2D.prototype.getImageData;
+                HTMLCanvasElement.prototype.toDataURL=function(){{
+                    const ctx=this.getContext('2d');
+                    if(ctx){{ctx.globalAlpha=0.999-(_noise%10)/100000;}}
+                    return _toDataURL.apply(this,arguments);
+                }};
+                CanvasRenderingContext2D.prototype.getImageData=function(x,y,w,h){{
+                    const data=_getImageData.call(this,x,y,w,h);
+                    if(data.data.length>0){{
+                        data.data[0]=(data.data[0]+(_noise%3))%256;
+                    }}
+                    return data;
+                }};
+
+                // ── WebRTC leak prevention (CRITICAL) ─────────
+                if(typeof RTCPeerConnection!=='undefined'){{
+                    const _rtc=RTCPeerConnection;
+                    window.RTCPeerConnection=function(cfg){{
+                        if(cfg&&cfg.iceServers){{
+                            cfg.iceServers=[];
+                        }}
+                        return new _rtc(cfg);
+                    }};
+                    window.RTCPeerConnection.prototype=_rtc.prototype;
+                }}
+                // Block local IP detection via WebRTC
+                Object.defineProperty(window,'RTCPeerConnection',{{
+                    value:window.RTCPeerConnection,writable:false
+                }});
+
+                // ── Timezone spoofing ─────────────────────────
+                const _DateTimeFormat=Intl.DateTimeFormat;
+                Intl.DateTimeFormat=function(locale,options){{
+                    if(!options)options={{}};
+                    if(!options.timeZone)options.timeZone='{profile["timezone"]}';
+                    return new _DateTimeFormat(locale,options);
+                }};
+                Intl.DateTimeFormat.prototype=_DateTimeFormat.prototype;
+
+                // ── Permissions API (prevent detection) ───────
+                if(navigator.permissions){{
+                    const _query=navigator.permissions.query.bind(navigator.permissions);
+                    navigator.permissions.query=function(params){{
+                        if(params.name==='notifications'){{
+                            return Promise.resolve({{state:'denied'}});
+                        }}
+                        return _query(params);
+                    }};
+                }}
+
+                // ── Screen properties ─────────────────────────
+                Object.defineProperty(screen,'width',{{get:()=>{profile["viewport"]["width"]}}});
+                Object.defineProperty(screen,'height',{{get:()=>{profile["viewport"]["height"]}}});
+                Object.defineProperty(screen,'availWidth',{{get:()=>{profile["viewport"]["width"]}}});
+                Object.defineProperty(screen,'availHeight',{{get:()=>{profile["viewport"]["height"]-40}}});
+
+                // ── Prevent automation detection ──────────────
+                delete window.__nightmare;
+                delete window._phantom;
+                delete window.callPhantom;
+                Object.defineProperty(navigator,'maxTouchPoints',{{get:()=>0}});
             """)
             self.counter["active"]+=1
             tasks=[asyncio.create_task(self._tab(context,profile,i)) for i in range(self.proj.tabs)]
@@ -1206,18 +1570,31 @@ class ImpressionWorker:
             # ── Close cookie banners / popups ─────────────
             await _close_popups(page)
 
+            # ── Wait briefly for ads to load then detect ──
+            await asyncio.sleep(random.uniform(1.5, 2.5))
+            ad_count = await _detect_ads(page)
+            ad_info  = f"  📢ads={ad_count}" if ad_count > 0 else ""
+
+            # Update global ads counter
+            self.counter["ads"] = self.counter.get("ads", 0) + ad_count
+
             LOG.emit(
-                f"{tag}[{src}][{profile['browser']}/{profile['device'].split()[1]}] ✓  "
-                f"{url}  speed={speed_ms}ms  scroll={stay:.0f}s","HIT")
+                f"{tag}[{src}][{profile['browser']}/Desktop] ✓  "
+                f"{url}  speed={speed_ms}ms  scroll={stay:.0f}s{ad_info}", "HIT")
+
+            if ad_count > 0:
+                LOG.emit(f"{tag} 📢 {ad_count} ad(s) detected on page", "OK")
 
             # Fire visit callback for live table + chart
             elapsed = time.time()-t0
             if self.visit_cb:
-                self.visit_cb(profile["device"],profile["browser"],url,src,elapsed)
+                self.visit_cb(profile["device"],profile["browser"],url,src,elapsed,ad_count)
+
+            # ── Human mouse simulation ────────────────────
+            await _simulate_mouse(page)
 
             await self._scroll(page,stay)
             self.counter["done"]+=1; self.counter["hits"]+=1
-            # Reset consecutive error count for this proxy on success
             if self.proxy_raw and "proxy_errors" in self.counter:
                 self.counter["proxy_errors"].pop(self.proxy_raw, None)
 
@@ -1347,7 +1724,7 @@ class Engine:
 
 class EngineThread(QThread):
     done_sig   = pyqtSignal()
-    visit_sig  = pyqtSignal(str,str,str,str,float)  # device,browser,url,source,elapsed
+    visit_sig  = pyqtSignal(str,str,str,str,float,int)  # device,browser,url,source,elapsed,ads
 
     def __init__(self, proj: ProjectConfig, counter):
         super().__init__()
@@ -1357,8 +1734,8 @@ class EngineThread(QThread):
         loop=asyncio.new_event_loop(); asyncio.set_event_loop(loop)
         self.counter["proxy_errors"]={}
 
-        def _visit_cb(device,browser,url,source,elapsed):
-            self.visit_sig.emit(device,browser,url,source,elapsed)
+        def _visit_cb(device,browser,url,source,elapsed,ads=0):
+            self.visit_sig.emit(device,browser,url,source,elapsed,ads)
 
         self._engine=Engine(self.proj,self.counter,_visit_cb)
         try: loop.run_until_complete(self._engine.run())
@@ -1633,11 +2010,11 @@ class DashboardPanel(QWidget):
             f"{proj.url}  ·  {src_icon} {proj.traffic_source}  ·  "
             f"{proj.impressions:,} impressions  ·  {proj.workers} workers × {proj.tabs} tabs  ·  "
             f"{len(proj.socks_list)} SOCKS")
-        self._counter={"done":0,"hits":0,"errors":0,"active":0}
+        self._counter={"done":0,"hits":0,"errors":0,"active":0,"ads":0}
         self._target=proj.impressions
         self.visit_table.clear()
         self.chart.reset()
-        self.chart.set_target(proj.impressions)   # wire target to chart progress bar
+        self.chart.set_target(proj.impressions)
         self.v_done.setText("0"); self.v_tgt.setText(f"{proj.impressions:,}")
         self.v_active.setText("0"); self.v_err.setText("0")
         self.prog.setMaximum(proj.impressions); self.prog.setValue(0)
@@ -1648,14 +2025,15 @@ class DashboardPanel(QWidget):
     def append_log(self, html):
         self.log_box.append(html); self.log_box.moveCursor(QTextCursor.End)
 
-    def _on_visit(self, device, browser, url, source, elapsed):
-        self.visit_table.add_visit(device, browser, url, source, elapsed)
-        self.chart.add_hit(1)   # one hit per successful tab visit
+    def _on_visit(self, device, browser, url, source, elapsed, ads):
+        self.visit_table.add_visit(device, browser, url, source, elapsed, ads)
+        self.chart.add_hit(1)
 
     def _tick(self):
         if self._target:
             done=self._counter["done"]; tgt=self._target
             active=self._counter["active"]; err=self._counter["errors"]
+            ads=self._counter.get("ads",0)
             self.v_done.setText(f"{done:,}")
             self.v_tgt.setText(f"{tgt:,}")
             self.v_active.setText(str(active))
@@ -1677,7 +2055,7 @@ class DashboardPanel(QWidget):
     def _start(self):
         if not hasattr(self,"_proj"): return
         # Full reset for re-run
-        self._counter={"done":0,"hits":0,"errors":0,"active":0,"proxy_errors":{}}
+        self._counter={"done":0,"hits":0,"errors":0,"active":0,"ads":0,"proxy_errors":{}}
         self._start_time=time.time()
         self.chart.reset()
         self.chart.set_target(self._proj.impressions)
