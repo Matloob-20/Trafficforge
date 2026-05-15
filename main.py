@@ -1235,22 +1235,24 @@ class ImpressionWorker:
         except Exception as exc:
             self.counter["errors"]+=1
             err=str(exc)
-            # Only count as proxy error if it's actually a proxy/connection issue
-            # Website timeouts should NOT expire the proxy
+            # ONLY real SOCKS connection failures expire proxy
+            # Page errors, JS errors, timeouts = NOT proxy fault
             is_proxy_err = any(k in err for k in [
-                "SOCKS","proxy","refused","tunnel",
-                "ERR_PROXY","ERR_SOCKS","ERR_CONNECTION_REFUSED"
+                "SOCKS5 ","SOCKS4 ",
+                "ERR_PROXY_CONNECTION_FAILED",
+                "ERR_SOCKS_CONNECTION_FAILED",
+                "Proxy connection failed",
             ])
             if self.proxy_raw and is_proxy_err:
                 pe=self.counter.setdefault("proxy_errors",{})
                 pe[self.proxy_raw]=pe.get(self.proxy_raw,0)+1
             if "Timeout" in err or "timeout" in err:
                 px_id=self.proxy_raw.split(":")[-2] if self.proxy_raw else "direct"
-                LOG.emit(f"{tag} ⏱ TIMEOUT 40s — website slow  ({px_id})","WARN")
+                LOG.emit(f"{tag} ⏱ TIMEOUT — slow page ({px_id})","WARN")
             elif is_proxy_err:
                 LOG.emit(f"{tag} PROXY ERR: {err[:60]}","ERROR")
             else:
-                LOG.emit(f"{tag} {err[:70]}","ERROR")
+                LOG.emit(f"{tag} ERR: {err[:70]}","ERROR")
         finally:
             try:
                 if page: await page.close()
@@ -1321,8 +1323,9 @@ class Engine:
                     await w.run(browser)
                     if px and px not in self._dead:
                         errs=self.counter.get("proxy_errors",{}).get(px,0)
-                        # Mark dead after just 3 consecutive failures (faster detection)
-                        if errs>=3:
+                        # threshold = tabs × 2 so all tabs must fail twice before proxy dies
+                        threshold = max(6, proj.tabs * 2)
+                        if errs >= threshold:
                             self._dead.add(px); info=parse_proxy(px)
                             tag=f"{info['host']}:{info['port']}" if info else px[:30]
                             LOG.emit(f"⚠ PROXY DEAD: {tag} ({errs} consecutive fails) — removed from pool","EXPIRE")

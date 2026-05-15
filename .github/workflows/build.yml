@@ -21,15 +21,29 @@ jobs:
       - name: Install build tools
         run: pip install pyinstaller
 
-      - name: Inject main.py into launcher
+      - name: Inject main.py as base64 into launcher
         shell: pwsh
         run: |
-          $mainCode = Get-Content -Path "main.py" -Raw -Encoding UTF8
-          $escaped = $mainCode -replace '\\', '\\\\' -replace '"""', '\"\"\"'
+          # Read main.py and encode as base64 — no escaping issues possible
+          $bytes = [System.IO.File]::ReadAllBytes("main.py")
+          $b64 = [System.Convert]::ToBase64String($bytes)
+          
+          # Read launcher.py and replace placeholder with base64 string
           $launcher = Get-Content -Path "launcher.py" -Raw -Encoding UTF8
-          $launcher = $launcher -replace '"__MAIN_PY_PLACEHOLDER__"', ('"""' + $escaped + '"""')
-          $launcher | Out-File -FilePath "launcher_build.py" -Encoding UTF8
-          Write-Host "Injection complete — launcher_build.py ready"
+          $launcher = $launcher -replace '"__MAIN_PY_B64_PLACEHOLDER__"', ('"' + $b64 + '"')
+          
+          # Write launcher_build.py
+          [System.IO.File]::WriteAllText("launcher_build.py", $launcher, [System.Text.Encoding]::UTF8)
+          Write-Host "Base64 injection complete"
+          
+          # Verify the injection worked
+          $verify = Get-Content "launcher_build.py" -Raw
+          if ($verify -match "MAIN_PY_B64 = `"[A-Za-z0-9+/]") {
+              Write-Host "Verification OK — base64 string found"
+          } else {
+              Write-Error "Injection FAILED"
+              exit 1
+          }
 
       - name: Download portable Python 3.11
         shell: pwsh
@@ -38,22 +52,22 @@ jobs:
           Invoke-WebRequest -Uri $url -OutFile "python-embed.zip"
           Expand-Archive -Path "python-embed.zip" -DestinationPath "portable_python"
           
-          # Enable site-packages in embedded python
+          # Enable site-packages
           $pth = Get-ChildItem "portable_python" -Filter "python*._pth" | Select-Object -First 1
           (Get-Content $pth.FullName) -replace "#import site","import site" | Set-Content $pth.FullName
           
-          # Install pip into portable python
+          # Install pip
           Invoke-WebRequest -Uri "https://bootstrap.pypa.io/get-pip.py" -OutFile "get-pip.py"
           & "portable_python\python.exe" "get-pip.py" --no-warn-script-location
           
-          # Install all required packages into portable python
+          # Install all packages
           & "portable_python\python.exe" -m pip install PyQt5 playwright PySocks requests --no-warn-script-location
           
-          Write-Host "Portable Python + packages ready"
+          # Verify packages
           & "portable_python\python.exe" -c "import PyQt5, playwright, socks, requests; print('All packages OK')"
 
       - name: Build EXE
-        run: pyinstaller --onefile --windowed --name="TrafficForge" --hidden-import=tkinter --hidden-import=tkinter.ttk launcher_build.py
+        run: pyinstaller --onefile --windowed --name="TrafficForge" --hidden-import=tkinter --hidden-import=tkinter.ttk --hidden-import=base64 launcher_build.py
 
       - name: Install NSIS
         run: choco install nsis -y --no-progress
@@ -67,17 +81,14 @@ jobs:
           OutFile "TrafficForge_Setup.exe"
           InstallDir "$PROGRAMFILES\TrafficForge"
           RequestExecutionLevel admin
-          
           !insertmacro MUI_PAGE_WELCOME
           !insertmacro MUI_PAGE_DIRECTORY
           !insertmacro MUI_PAGE_INSTFILES
           !insertmacro MUI_PAGE_FINISH
           !insertmacro MUI_LANGUAGE "English"
-          
           Section "Install"
             SetOutPath "$INSTDIR"
             File "dist\TrafficForge.exe"
-            ; Bundle all portable Python files into install dir
             File /r "portable_python\*.*"
             CreateShortcut "$DESKTOP\TrafficForge.lnk" "$INSTDIR\TrafficForge.exe"
             CreateShortcut "$SMPROGRAMS\TrafficForge.lnk" "$INSTDIR\TrafficForge.exe"
@@ -85,7 +96,6 @@ jobs:
             WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\TrafficForge" "DisplayName" "TrafficForge v4.0"
             WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\TrafficForge" "UninstallString" "$INSTDIR\Uninstall.exe"
           SectionEnd
-          
           Section "Uninstall"
             RMDir /r "$INSTDIR"
             Delete "$DESKTOP\TrafficForge.lnk"
