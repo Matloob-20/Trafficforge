@@ -24,17 +24,12 @@ jobs:
       - name: Inject main.py into launcher
         shell: pwsh
         run: |
-          # Read main.py content
           $mainCode = Get-Content -Path "main.py" -Raw -Encoding UTF8
-          # Escape backslashes and quotes for Python string embedding
           $escaped = $mainCode -replace '\\', '\\\\' -replace '"""', '\"\"\"'
-          # Read launcher
           $launcher = Get-Content -Path "launcher.py" -Raw -Encoding UTF8
-          # Replace placeholder with actual code
           $launcher = $launcher -replace '"__MAIN_PY_PLACEHOLDER__"', ('"""' + $escaped + '"""')
-          # Write back
           $launcher | Out-File -FilePath "launcher_build.py" -Encoding UTF8
-          Write-Host "Injection complete"
+          Write-Host "Injection complete — launcher_build.py ready"
 
       - name: Download portable Python 3.11
         shell: pwsh
@@ -42,15 +37,20 @@ jobs:
           $url = "https://www.python.org/ftp/python/3.11.9/python-3.11.9-embed-amd64.zip"
           Invoke-WebRequest -Uri $url -OutFile "python-embed.zip"
           Expand-Archive -Path "python-embed.zip" -DestinationPath "portable_python"
-          # Enable site-packages
+          
+          # Enable site-packages in embedded python
           $pth = Get-ChildItem "portable_python" -Filter "python*._pth" | Select-Object -First 1
           (Get-Content $pth.FullName) -replace "#import site","import site" | Set-Content $pth.FullName
-          # Install pip
+          
+          # Install pip into portable python
           Invoke-WebRequest -Uri "https://bootstrap.pypa.io/get-pip.py" -OutFile "get-pip.py"
           & "portable_python\python.exe" "get-pip.py" --no-warn-script-location
-          # Install packages
+          
+          # Install all required packages into portable python
           & "portable_python\python.exe" -m pip install PyQt5 playwright PySocks requests --no-warn-script-location
-          Write-Host "Portable Python ready"
+          
+          Write-Host "Portable Python + packages ready"
+          & "portable_python\python.exe" -c "import PyQt5, playwright, socks, requests; print('All packages OK')"
 
       - name: Build EXE
         run: pyinstaller --onefile --windowed --name="TrafficForge" --hidden-import=tkinter --hidden-import=tkinter.ttk launcher_build.py
@@ -58,7 +58,7 @@ jobs:
       - name: Install NSIS
         run: choco install nsis -y --no-progress
 
-      - name: Create installer script
+      - name: Create NSIS installer
         shell: pwsh
         run: |
           $nsis = @'
@@ -67,14 +67,17 @@ jobs:
           OutFile "TrafficForge_Setup.exe"
           InstallDir "$PROGRAMFILES\TrafficForge"
           RequestExecutionLevel admin
+          
           !insertmacro MUI_PAGE_WELCOME
           !insertmacro MUI_PAGE_DIRECTORY
           !insertmacro MUI_PAGE_INSTFILES
           !insertmacro MUI_PAGE_FINISH
           !insertmacro MUI_LANGUAGE "English"
+          
           Section "Install"
             SetOutPath "$INSTDIR"
             File "dist\TrafficForge.exe"
+            ; Bundle all portable Python files into install dir
             File /r "portable_python\*.*"
             CreateShortcut "$DESKTOP\TrafficForge.lnk" "$INSTDIR\TrafficForge.exe"
             CreateShortcut "$SMPROGRAMS\TrafficForge.lnk" "$INSTDIR\TrafficForge.exe"
@@ -82,6 +85,7 @@ jobs:
             WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\TrafficForge" "DisplayName" "TrafficForge v4.0"
             WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\TrafficForge" "UninstallString" "$INSTDIR\Uninstall.exe"
           SectionEnd
+          
           Section "Uninstall"
             RMDir /r "$INSTDIR"
             Delete "$DESKTOP\TrafficForge.lnk"

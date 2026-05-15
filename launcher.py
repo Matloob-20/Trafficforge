@@ -1,76 +1,92 @@
 """
 TrafficForge v4.0 - Self Contained Launcher
-main.py is embedded inside this exe — no external files needed.
-Only Chromium downloads on first run.
+main.py is embedded inside this exe.
+Only Chromium downloads on first run (~300MB).
 """
-import sys
-import os
-import subprocess
-import threading
-import tempfile
-import tkinter as tk
+import sys, os, subprocess, threading, tempfile, tkinter as tk
 from tkinter import ttk, messagebox
 
 NO_WINDOW = subprocess.CREATE_NO_WINDOW if hasattr(subprocess, 'CREATE_NO_WINDOW') else 0
 
-# ── main.py is embedded as a string inside the exe ────
-# This gets replaced at build time by GitHub Actions
+# Injected at build time by GitHub Actions
 MAIN_PY_CODE = "__MAIN_PY_PLACEHOLDER__"
 
 
 def get_install_dir():
+    """Folder where TrafficForge.exe lives."""
     if getattr(sys, 'frozen', False):
         return os.path.dirname(sys.executable)
     return os.path.dirname(os.path.abspath(__file__))
 
 
 def find_python():
-    """Find bundled portable Python."""
-    install_dir = get_install_dir()
-    candidates = [
-        os.path.join(install_dir, "python.exe"),
-        os.path.join(install_dir, "python", "python.exe"),
-        os.path.join(install_dir, "runtime", "python.exe"),
-    ]
-    for p in candidates:
+    """Find bundled portable python.exe in install dir."""
+    d = get_install_dir()
+    for p in [
+        os.path.join(d, "python.exe"),
+        os.path.join(d, "python", "python.exe"),
+        os.path.join(d, "runtime", "python.exe"),
+    ]:
         if os.path.exists(p):
             return p
     return None
 
 
-def extract_main() -> str:
-    """Extract embedded main.py to a temp file, return path."""
-    tmp = tempfile.NamedTemporaryFile(
-        mode='w', suffix='.py',
-        prefix='trafficforge_',
-        delete=False,
-        encoding='utf-8')
-    tmp.write(MAIN_PY_CODE)
-    tmp.close()
-    return tmp.name
+def get_env(python_path):
+    """Build environment with correct paths for portable Python."""
+    env = os.environ.copy()
+    python_dir = os.path.dirname(python_path)
+
+    # Set PLAYWRIGHT_BROWSERS_PATH to user's AppData so Chromium
+    # is downloaded/found in standard location across all runs
+    browsers_path = os.path.join(
+        os.environ.get("LOCALAPPDATA", os.path.expanduser("~")),
+        "TrafficForge", "browsers")
+    os.makedirs(browsers_path, exist_ok=True)
+    env["PLAYWRIGHT_BROWSERS_PATH"] = browsers_path
+
+    # Make sure portable Python libs are on PATH
+    env["PATH"] = python_dir + os.pathsep + env.get("PATH", "")
+
+    # Remove any conflicting PYTHONPATH/PYTHONHOME that might confuse portable Python
+    env.pop("PYTHONHOME", None)
+    env.pop("PYTHONPATH", None)
+
+    return env, browsers_path
 
 
-def chromium_installed() -> bool:
+def chromium_installed(browsers_path) -> bool:
+    """Check if Chromium is downloaded in our browsers folder."""
     try:
-        cache = os.path.expanduser(
-            os.path.join("~", "AppData", "Local", "ms-playwright"))
-        if not os.path.exists(cache):
+        if not os.path.exists(browsers_path):
             return False
-        for d in os.listdir(cache):
+        for d in os.listdir(browsers_path):
             if "chromium" in d.lower():
-                for root, dirs, files in os.walk(os.path.join(cache, d)):
+                for root, dirs, files in os.walk(os.path.join(browsers_path, d)):
                     for f in files:
-                        if f.lower() in ("chrome.exe",
-                                         "chrome-headless-shell.exe"):
+                        if f.lower() in ("chrome.exe", "chrome-headless-shell.exe"):
                             return True
         return False
     except Exception:
         return False
 
 
+def extract_main() -> str:
+    """Write embedded main.py to temp file and return path."""
+    tmp = tempfile.NamedTemporaryFile(
+        mode='w', suffix='.py', prefix='tf_',
+        delete=False, encoding='utf-8')
+    tmp.write(MAIN_PY_CODE)
+    tmp.close()
+    return tmp.name
+
+
 class InstallerWindow:
-    def __init__(self, python_path):
+    def __init__(self, python_path, env, browsers_path):
         self.python = python_path
+        self.env = env
+        self.browsers_path = browsers_path
+
         self.root = tk.Tk()
         self.root.title("TrafficForge v4.0 - Setup")
         self.root.geometry("500x320")
@@ -82,17 +98,14 @@ class InstallerWindow:
                  font=("Segoe UI", 18, "bold"),
                  bg="#0d0d1a", fg="#a855f7").pack(pady=(28, 4))
 
-        tk.Label(self.root,
-                 text="One-time setup: Download Chromium browser",
-                 font=("Segoe UI", 11),
-                 bg="#0d0d1a", fg="#6b7280").pack(pady=(0, 12))
+        tk.Label(self.root, text="First-time setup: Download Chromium browser",
+                 font=("Segoe UI", 11), bg="#0d0d1a", fg="#6b7280").pack(pady=(0, 12))
 
         self.status = tk.Label(
             self.root,
             text="Chromium is required to simulate browser visits.\n"
-                 "Download is ~300MB and happens once only.",
-            font=("Segoe UI", 10),
-            bg="#0d0d1a", fg="#9ca3af",
+                 "~300MB download — happens once only.",
+            font=("Segoe UI", 10), bg="#0d0d1a", fg="#9ca3af",
             wraplength=440, justify="center")
         self.status.pack(pady=6)
 
@@ -113,15 +126,14 @@ class InstallerWindow:
             font=("Segoe UI", 11, "bold"),
             bg="#7c3aed", fg="white",
             activebackground="#a855f7", activeforeground="white",
-            relief="flat", cursor="hand2",
-            padx=16, pady=10,
+            relief="flat", cursor="hand2", padx=16, pady=10,
             command=self.start)
         self.btn.pack(pady=8)
 
         tk.Label(self.root,
-                 text="All packages bundled — no Python installation needed",
-                 font=("Segoe UI", 8),
-                 bg="#0d0d1a", fg="#374151").pack(side="bottom", pady=10)
+                 text="✅ Python & all packages already bundled — no extra installs needed",
+                 font=("Segoe UI", 8), bg="#0d0d1a", fg="#374151"
+                 ).pack(side="bottom", pady=10)
 
         self.root.mainloop()
 
@@ -136,20 +148,21 @@ class InstallerWindow:
 
     def _download(self):
         try:
-            self._update("Downloading Chromium browser…\nPlease wait 2-3 minutes")
+            self._update("Contacting server…\nPlease wait 2-3 minutes")
             r = subprocess.run(
                 [self.python, "-m", "playwright", "install", "chromium"],
                 capture_output=True, text=True,
-                creationflags=NO_WINDOW, timeout=600)
+                env=self.env, creationflags=NO_WINDOW, timeout=600)
             if r.returncode != 0:
-                raise Exception(r.stderr[-400:] or r.stdout[-400:])
-            self._update("✅ Done! Launching TrafficForge…")
+                err = (r.stderr or r.stdout or "Unknown error")[-500:]
+                raise Exception(f"Download failed:\n{err}")
+            self._update("✅ Chromium ready!\nLaunching TrafficForge…")
             self.progress.stop()
             self.root.after(900, self._launch)
         except subprocess.TimeoutExpired:
             self.progress.stop()
             messagebox.showerror("Timeout",
-                                 "Download timed out.\nCheck your internet and retry.")
+                                 "Download timed out.\nCheck internet connection and retry.")
             self._reset()
         except Exception as e:
             self.progress.stop()
@@ -162,12 +175,13 @@ class InstallerWindow:
 
     def _launch(self):
         self.root.destroy()
-        _launch(self.python)
+        _launch(self.python, self.env)
 
 
-def _launch(python):
+def _launch(python, env):
+    """Extract and run main.py with correct environment."""
     main_path = extract_main()
-    subprocess.Popen([python, main_path], creationflags=NO_WINDOW)
+    subprocess.Popen([python, main_path], env=env, creationflags=NO_WINDOW)
 
 
 def main():
@@ -175,12 +189,16 @@ def main():
     if not python:
         messagebox.showerror(
             "Installation Error",
-            "Bundled Python not found.\nPlease reinstall TrafficForge.")
+            "Bundled Python not found in installation folder.\n"
+            "Please reinstall TrafficForge using TrafficForge_Setup.exe")
         return
-    if chromium_installed():
-        _launch(python)
+
+    env, browsers_path = get_env(python)
+
+    if chromium_installed(browsers_path):
+        _launch(python, env)
     else:
-        InstallerWindow(python)
+        InstallerWindow(python, env, browsers_path)
 
 
 if __name__ == "__main__":
