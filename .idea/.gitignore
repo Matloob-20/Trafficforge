@@ -1,0 +1,17 @@
+# Default ignored files
+/shelf/
+/workspace.xml
+# Editor-based HTTP Client requests
+/httpRequests/
+/kolzchut_scraper_sample.py/
+/proxy_checker.py/
+/proxy.txt/
+/report.csv/
+/requirements.txt/
+/rights.csv/
+/rights.json/
+/running.txt/
+/running_update.txt/
+/today.txt/
+/trafficforge_web.py/
+/TraficForges.py/

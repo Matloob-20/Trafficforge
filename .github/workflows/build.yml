@@ -21,21 +21,21 @@ jobs:
       - name: Install build tools
         run: pip install pyinstaller
 
-      - name: Inject main.py as base64 into launcher
+      - name: Inject New_traffic.py as base64 into launcher
         shell: pwsh
         run: |
-          # Read main.py and encode as base64 — no escaping issues possible
-          $bytes = [System.IO.File]::ReadAllBytes("main.py")
+          # Read New_traffic.py and encode as base64
+          $bytes = [System.IO.File]::ReadAllBytes("New_traffic.py")
           $b64 = [System.Convert]::ToBase64String($bytes)
-          
+
           # Read launcher.py and replace placeholder with base64 string
           $launcher = Get-Content -Path "launcher.py" -Raw -Encoding UTF8
           $launcher = $launcher -replace '"__MAIN_PY_B64_PLACEHOLDER__"', ('"' + $b64 + '"')
-          
+
           # Write launcher_build.py
           [System.IO.File]::WriteAllText("launcher_build.py", $launcher, [System.Text.Encoding]::UTF8)
           Write-Host "Base64 injection complete"
-          
+
           # Verify the injection worked
           $verify = Get-Content "launcher_build.py" -Raw
           if ($verify -match "MAIN_PY_B64 = `"[A-Za-z0-9+/]") {
@@ -51,18 +51,18 @@ jobs:
           $url = "https://www.python.org/ftp/python/3.11.9/python-3.11.9-embed-amd64.zip"
           Invoke-WebRequest -Uri $url -OutFile "python-embed.zip"
           Expand-Archive -Path "python-embed.zip" -DestinationPath "portable_python"
-          
+
           # Enable site-packages
           $pth = Get-ChildItem "portable_python" -Filter "python*._pth" | Select-Object -First 1
           (Get-Content $pth.FullName) -replace "#import site","import site" | Set-Content $pth.FullName
-          
+
           # Install pip
           Invoke-WebRequest -Uri "https://bootstrap.pypa.io/get-pip.py" -OutFile "get-pip.py"
           & "portable_python\python.exe" "get-pip.py" --no-warn-script-location
-          
+
           # Install all packages
           & "portable_python\python.exe" -m pip install PyQt5 playwright PySocks requests --no-warn-script-location
-          
+
           # Verify packages
           & "portable_python\python.exe" -c "import PyQt5, playwright, socks, requests; print('All packages OK')"
 
@@ -72,7 +72,7 @@ jobs:
       - name: Install NSIS
         run: choco install nsis -y --no-progress
 
-      - name: Create NSIS installer
+      - name: Create NSIS installer script
         shell: pwsh
         run: |
           $nsis = @'
@@ -111,7 +111,7 @@ jobs:
           $env:PATH = "C:\Program Files (x86)\NSIS;$env:PATH"
           makensis installer.nsi
 
-      - name: Upload
+      - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
           name: TrafficForge-Setup
