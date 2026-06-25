@@ -24,22 +24,18 @@ jobs:
       - name: Inject New_traffic.py as base64 into launcher
         shell: pwsh
         run: |
-          # Read New_traffic.py and encode as base64
           $bytes = [System.IO.File]::ReadAllBytes("New_traffic.py")
           $b64 = [System.Convert]::ToBase64String($bytes)
 
-          # Read launcher.py and replace placeholder with base64 string
           $launcher = Get-Content -Path "launcher.py" -Raw -Encoding UTF8
           $launcher = $launcher -replace '"__MAIN_PY_B64_PLACEHOLDER__"', ('"' + $b64 + '"')
 
-          # Write launcher_build.py
           [System.IO.File]::WriteAllText("launcher_build.py", $launcher, [System.Text.Encoding]::UTF8)
           Write-Host "Base64 injection complete"
 
-          # Verify the injection worked
           $verify = Get-Content "launcher_build.py" -Raw
           if ($verify -match "MAIN_PY_B64 = `"[A-Za-z0-9+/]") {
-              Write-Host "Verification OK — base64 string found"
+              Write-Host "Verification OK"
           } else {
               Write-Error "Injection FAILED"
               exit 1
@@ -52,22 +48,35 @@ jobs:
           Invoke-WebRequest -Uri $url -OutFile "python-embed.zip"
           Expand-Archive -Path "python-embed.zip" -DestinationPath "portable_python"
 
-          # Enable site-packages
           $pth = Get-ChildItem "portable_python" -Filter "python*._pth" | Select-Object -First 1
           (Get-Content $pth.FullName) -replace "#import site","import site" | Set-Content $pth.FullName
 
-          # Install pip
           Invoke-WebRequest -Uri "https://bootstrap.pypa.io/get-pip.py" -OutFile "get-pip.py"
           & "portable_python\python.exe" "get-pip.py" --no-warn-script-location
-
-          # Install all packages
           & "portable_python\python.exe" -m pip install PyQt5 playwright PySocks requests --no-warn-script-location
+          & "portable_python\python.exe" -c "import PyQt5, playwright, socks; print('All packages OK')"
 
-          # Verify packages
-          & "portable_python\python.exe" -c "import PyQt5, playwright, socks, requests; print('All packages OK')"
+      - name: Install Playwright Chromium and bundle it
+        shell: pwsh
+        run: |
+          # Install playwright for the build environment
+          pip install playwright
+
+          # Download Chromium into a local folder we will ship
+          $env:PLAYWRIGHT_BROWSERS_PATH = "$PWD\bundled_browsers"
+          python -m playwright install chromium
+
+          # Verify chrome.exe was downloaded
+          $chrome = Get-ChildItem -Recurse -Filter "chrome.exe" "bundled_browsers" | Select-Object -First 1
+          if ($chrome) {
+              Write-Host "Chromium bundled at: $($chrome.FullName)"
+          } else {
+              Write-Error "Chromium download FAILED"
+              exit 1
+          }
 
       - name: Build EXE
-        run: pyinstaller --onefile --windowed --name="TrafficForge" --hidden-import=tkinter --hidden-import=tkinter.ttk --hidden-import=base64 launcher_build.py
+        run: pyinstaller --onefile --windowed --name="TrafficForge" --hidden-import=tkinter --hidden-import=tkinter.ttk --hidden-import=base64 --hidden-import=glob launcher_build.py
 
       - name: Install NSIS
         run: choco install nsis -y --no-progress
@@ -75,41 +84,63 @@ jobs:
       - name: Create NSIS installer script
         shell: pwsh
         run: |
-          $nsis = @'
+          # Get the relative path of chromium folder inside bundled_browsers
+          $chromiumFolder = Get-ChildItem "bundled_browsers" -Directory | Where-Object { $_.Name -like "chromium-*" } | Select-Object -First 1
+          $chromiumName = $chromiumFolder.Name
+          Write-Host "Chromium folder: $chromiumName"
+
+          $nsis = @"
           !include "MUI2.nsh"
           Name "TrafficForge v4.0"
           OutFile "TrafficForge_Setup.exe"
-          InstallDir "$PROGRAMFILES\TrafficForge"
+          InstallDir "`$PROGRAMFILES\TrafficForge"
           RequestExecutionLevel admin
+
           !insertmacro MUI_PAGE_WELCOME
           !insertmacro MUI_PAGE_DIRECTORY
           !insertmacro MUI_PAGE_INSTFILES
           !insertmacro MUI_PAGE_FINISH
           !insertmacro MUI_LANGUAGE "English"
+
           Section "Install"
-            SetOutPath "$INSTDIR"
+            SetOutPath "`$INSTDIR"
             File "dist\TrafficForge.exe"
+
+            ; Bundle portable Python
+            SetOutPath "`$INSTDIR\portable_python"
             File /r "portable_python\*.*"
-            CreateShortcut "$DESKTOP\TrafficForge.lnk" "$INSTDIR\TrafficForge.exe"
-            CreateShortcut "$SMPROGRAMS\TrafficForge.lnk" "$INSTDIR\TrafficForge.exe"
-            WriteUninstaller "$INSTDIR\Uninstall.exe"
+
+            ; Bundle Chromium — no internet needed on client machine
+            SetOutPath "`$INSTDIR\ms-playwright\$chromiumName"
+            File /r "bundled_browsers\$chromiumName\*.*"
+
+            ; Write env var so the app finds Chromium
+            WriteRegStr HKLM "SYSTEM\CurrentControlSet\Control\Session Manager\Environment" "PLAYWRIGHT_BROWSERS_PATH" "`$INSTDIR\ms-playwright"
+
+            CreateShortcut "`$DESKTOP\TrafficForge.lnk" "`$INSTDIR\TrafficForge.exe"
+            CreateShortcut "`$SMPROGRAMS\TrafficForge.lnk" "`$INSTDIR\TrafficForge.exe"
+            WriteUninstaller "`$INSTDIR\Uninstall.exe"
             WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\TrafficForge" "DisplayName" "TrafficForge v4.0"
-            WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\TrafficForge" "UninstallString" "$INSTDIR\Uninstall.exe"
+            WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\TrafficForge" "UninstallString" "`$INSTDIR\Uninstall.exe"
           SectionEnd
+
           Section "Uninstall"
-            RMDir /r "$INSTDIR"
-            Delete "$DESKTOP\TrafficForge.lnk"
-            Delete "$SMPROGRAMS\TrafficForge.lnk"
+            RMDir /r "`$INSTDIR"
+            Delete "`$DESKTOP\TrafficForge.lnk"
+            Delete "`$SMPROGRAMS\TrafficForge.lnk"
             DeleteRegKey HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\TrafficForge"
+            DeleteRegValue HKLM "SYSTEM\CurrentControlSet\Control\Session Manager\Environment" "PLAYWRIGHT_BROWSERS_PATH"
           SectionEnd
-          '@
+          "@
           $nsis | Out-File -FilePath installer.nsi -Encoding UTF8
+          Write-Host "NSIS script created"
 
       - name: Build installer
         shell: pwsh
         run: |
           $env:PATH = "C:\Program Files (x86)\NSIS;$env:PATH"
           makensis installer.nsi
+          Write-Host "Installer built successfully"
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
