@@ -19,7 +19,7 @@ jobs:
           python-version: '3.11'
 
       - name: Install build tools
-        run: pip install pyinstaller
+        run: pip install pyinstaller playwright
 
       - name: Inject New_traffic.py as base64 into launcher
         shell: pwsh
@@ -34,7 +34,7 @@ jobs:
           Write-Host "Base64 injection complete"
 
           $verify = Get-Content "launcher_build.py" -Raw
-          if ($verify -match "MAIN_PY_B64 = `"[A-Za-z0-9+/]") {
+          if ($verify -match 'MAIN_PY_B64 = "[A-Za-z0-9+/]') {
               Write-Host "Verification OK"
           } else {
               Write-Error "Injection FAILED"
@@ -48,6 +48,7 @@ jobs:
           Invoke-WebRequest -Uri $url -OutFile "python-embed.zip"
           Expand-Archive -Path "python-embed.zip" -DestinationPath "portable_python"
 
+          # Enable site-packages in the embedded distribution
           $pth = Get-ChildItem "portable_python" -Filter "python*._pth" | Select-Object -First 1
           (Get-Content $pth.FullName) -replace "#import site","import site" | Set-Content $pth.FullName
 
@@ -59,14 +60,9 @@ jobs:
       - name: Install Playwright Chromium and bundle it
         shell: pwsh
         run: |
-          # Install playwright for the build environment
-          pip install playwright
-
-          # Download Chromium into a local folder we will ship
           $env:PLAYWRIGHT_BROWSERS_PATH = "$PWD\bundled_browsers"
           python -m playwright install chromium
 
-          # Verify chrome.exe was downloaded
           $chrome = Get-ChildItem -Recurse -Filter "chrome.exe" "bundled_browsers" | Select-Object -First 1
           if ($chrome) {
               Write-Host "Chromium bundled at: $($chrome.FullName)"
@@ -75,8 +71,8 @@ jobs:
               exit 1
           }
 
-      - name: Build EXE
-        run: pyinstaller --onefile --windowed --name="TrafficForge" --hidden-import=tkinter --hidden-import=tkinter.ttk --hidden-import=base64 --hidden-import=glob launcher_build.py
+      - name: Build launcher EXE
+        run: pyinstaller --onefile --windowed --name="TrafficForge" --hidden-import=base64 --hidden-import=ctypes launcher_build.py
 
       - name: Install NSIS
         run: choco install nsis -y --no-progress
@@ -84,13 +80,18 @@ jobs:
       - name: Create NSIS installer script
         shell: pwsh
         run: |
-          # Get the relative path of chromium folder inside bundled_browsers
+          # Detect the chromium folder name (e.g. "chromium-1234")
           $chromiumFolder = Get-ChildItem "bundled_browsers" -Directory | Where-Object { $_.Name -like "chromium-*" } | Select-Object -First 1
           $chromiumName = $chromiumFolder.Name
           Write-Host "Chromium folder: $chromiumName"
 
           $nsis = @"
           !include "MUI2.nsh"
+
+          ; ── LZMA solid compression: cuts installer size ~25% ──
+          SetCompressor /SOLID lzma
+          SetCompressorDictSize 64
+
           Name "TrafficForge v4.0"
           OutFile "TrafficForge_Setup.exe"
           InstallDir "`$PROGRAMFILES\TrafficForge"
@@ -106,16 +107,13 @@ jobs:
             SetOutPath "`$INSTDIR"
             File "dist\TrafficForge.exe"
 
-            ; Bundle portable Python
+            ; Portable Python — runs the app
             SetOutPath "`$INSTDIR\portable_python"
             File /r "portable_python\*.*"
 
-            ; Bundle Chromium — no internet needed on client machine
+            ; Bundled Chromium — no internet needed on client
             SetOutPath "`$INSTDIR\ms-playwright\$chromiumName"
             File /r "bundled_browsers\$chromiumName\*.*"
-
-            ; Write env var so the app finds Chromium
-            WriteRegStr HKLM "SYSTEM\CurrentControlSet\Control\Session Manager\Environment" "PLAYWRIGHT_BROWSERS_PATH" "`$INSTDIR\ms-playwright"
 
             CreateShortcut "`$DESKTOP\TrafficForge.lnk" "`$INSTDIR\TrafficForge.exe"
             CreateShortcut "`$SMPROGRAMS\TrafficForge.lnk" "`$INSTDIR\TrafficForge.exe"
@@ -129,7 +127,6 @@ jobs:
             Delete "`$DESKTOP\TrafficForge.lnk"
             Delete "`$SMPROGRAMS\TrafficForge.lnk"
             DeleteRegKey HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\TrafficForge"
-            DeleteRegValue HKLM "SYSTEM\CurrentControlSet\Control\Session Manager\Environment" "PLAYWRIGHT_BROWSERS_PATH"
           SectionEnd
           "@
           $nsis | Out-File -FilePath installer.nsi -Encoding UTF8

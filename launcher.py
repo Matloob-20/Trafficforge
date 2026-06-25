@@ -1,177 +1,102 @@
 """
-TrafficForge v4.0 - Launcher
-main.py embedded as base64 — no escaping issues.
+TrafficForge launcher — tiny bootstrap EXE.
+
+Responsibilities:
+  1. Decode the embedded base64 copy of New_traffic.py to disk.
+  2. Set PLAYWRIGHT_BROWSERS_PATH to the bundled ms-playwright folder
+     next to the EXE (so we do NOT depend on a registry env var).
+  3. Hand off execution to portable_python\\pythonw.exe.
+
+The placeholder MAIN_PY_B64 is replaced at build time by the GitHub
+Actions workflow.
 """
-import sys, os, subprocess, threading, tempfile, base64, tkinter as tk
-from tkinter import ttk, messagebox
+import sys, os, base64, subprocess, tempfile, ctypes
 
-NO_WINDOW = subprocess.CREATE_NO_WINDOW if hasattr(subprocess, 'CREATE_NO_WINDOW') else 0
-
-# main.py embedded as base64 — injected by GitHub Actions
 MAIN_PY_B64 = "__MAIN_PY_B64_PLACEHOLDER__"
 
 
-def get_install_dir():
-    if getattr(sys, 'frozen', False):
+def _msgbox(title, text):
+    """Pop a Windows message box so users see fatal errors when the
+    console is hidden (windowed EXE)."""
+    try:
+        ctypes.windll.user32.MessageBoxW(0, text, title, 0x10)
+    except Exception:
+        print(f"[{title}] {text}")
+
+
+def _exe_dir():
+    """Folder containing the running EXE (or this script in dev mode)."""
+    if getattr(sys, "frozen", False):
         return os.path.dirname(sys.executable)
     return os.path.dirname(os.path.abspath(__file__))
 
 
-def find_python():
-    d = get_install_dir()
-    for p in [
-        os.path.join(d, "python.exe"),
-        os.path.join(d, "python", "python.exe"),
-    ]:
-        if os.path.exists(p):
-            return p
+def _find_portable_python(base):
+    """Locate pythonw.exe inside the bundled portable_python folder."""
+    for name in ("pythonw.exe", "python.exe"):
+        cand = os.path.join(base, "portable_python", name)
+        if os.path.isfile(cand):
+            return cand
     return None
 
 
-def get_env(python_path):
-    env = os.environ.copy()
-    python_dir = os.path.dirname(python_path)
-    scripts_dir = os.path.join(python_dir, "Scripts")
-    env["PATH"] = python_dir + os.pathsep + scripts_dir + os.pathsep + env.get("PATH", "")
-    env.pop("PYTHONHOME", None)
-    env.pop("PYTHONPATH", None)
-    env.pop("PLAYWRIGHT_BROWSERS_PATH", None)
-    return env
-
-
-def chromium_installed() -> bool:
-    try:
-        path = os.path.join(os.environ.get("LOCALAPPDATA", ""), "ms-playwright")
-        if not os.path.exists(path):
-            return False
-        for d in os.listdir(path):
-            if "chromium" in d.lower():
-                for root, dirs, files in os.walk(os.path.join(path, d)):
-                    for f in files:
-                        if f.lower() in ("chrome.exe", "chrome-headless-shell.exe"):
-                            return True
-        return False
-    except Exception:
-        return False
-
-
-def extract_main() -> str:
-    """Decode base64 embedded main.py and write to temp file."""
-    code = base64.b64decode(MAIN_PY_B64).decode('utf-8')
-    tmp = tempfile.NamedTemporaryFile(
-        mode='w', suffix='.py', prefix='tf_',
-        delete=False, encoding='utf-8')
-    tmp.write(code)
-    tmp.close()
-    return tmp.name
-
-
-class InstallerWindow:
-    def __init__(self, python_path, env):
-        self.python = python_path
-        self.env = env
-        self.root = tk.Tk()
-        self.root.title("TrafficForge v4.0 - Setup")
-        self.root.geometry("500x320")
-        self.root.resizable(False, False)
-        self.root.configure(bg="#0d0d1a")
-        self.root.eval('tk::PlaceWindow . center')
-
-        tk.Label(self.root, text="⚡ TrafficForge v4.0",
-                 font=("Segoe UI", 18, "bold"),
-                 bg="#0d0d1a", fg="#a855f7").pack(pady=(28, 4))
-
-        tk.Label(self.root, text="First-time setup: Downloading Chromium browser",
-                 font=("Segoe UI", 11), bg="#0d0d1a", fg="#6b7280").pack(pady=(0, 12))
-
-        self.status = tk.Label(self.root,
-                               text="Chromium is required to simulate browser visits.\n~300MB — happens once only.",
-                               font=("Segoe UI", 10), bg="#0d0d1a", fg="#9ca3af",
-                               wraplength=440, justify="center")
-        self.status.pack(pady=6)
-
-        style = ttk.Style()
-        style.theme_use("default")
-        style.configure("purple.Horizontal.TProgressbar",
-                        background="#7c3aed", troughcolor="#1e1e4a",
-                        bordercolor="#1e1e4a", lightcolor="#7c3aed",
-                        darkcolor="#7c3aed")
-        self.progress = ttk.Progressbar(self.root,
-                                        style="purple.Horizontal.TProgressbar",
-                                        length=420, mode="indeterminate")
-        self.progress.pack(pady=14)
-
-        self.btn = tk.Button(self.root,
-                             text="  ▶  Download & Launch TrafficForge  ",
-                             font=("Segoe UI", 11, "bold"),
-                             bg="#7c3aed", fg="white",
-                             activebackground="#a855f7", activeforeground="white",
-                             relief="flat", cursor="hand2", padx=16, pady=10,
-                             command=self.start)
-        self.btn.pack(pady=8)
-
-        tk.Label(self.root,
-                 text="All packages bundled — no Python installation needed",
-                 font=("Segoe UI", 8), bg="#0d0d1a", fg="#374151"
-                 ).pack(side="bottom", pady=10)
-
-        self.root.mainloop()
-
-    def start(self):
-        self.btn.config(state="disabled", text="  ⏳  Downloading…  ")
-        self.progress.start(8)
-        threading.Thread(target=self._download, daemon=True).start()
-
-    def _update(self, msg):
-        self.status.config(text=msg)
-        self.root.update_idletasks()
-
-    def _download(self):
-        try:
-            self._update("Downloading Chromium…\nPlease wait 2-3 minutes")
-            r = subprocess.run(
-                [self.python, "-m", "playwright", "install", "chromium"],
-                capture_output=True, text=True,
-                env=self.env, creationflags=NO_WINDOW, timeout=600)
-            if r.returncode != 0:
-                raise Exception((r.stderr or r.stdout or "Unknown")[-400:])
-            self._update("✅ Done! Launching TrafficForge…")
-            self.progress.stop()
-            self.root.after(900, self._launch)
-        except subprocess.TimeoutExpired:
-            self.progress.stop()
-            messagebox.showerror("Timeout", "Download timed out. Check internet and retry.")
-            self._reset()
-        except Exception as e:
-            self.progress.stop()
-            messagebox.showerror("Setup Failed", str(e))
-            self._reset()
-
-    def _reset(self):
-        self.btn.config(state="normal", text="  ▶  Retry Download  ")
-        self._update("Failed — click Retry.")
-
-    def _launch(self):
-        self.root.destroy()
-        _launch(self.python, self.env)
-
-
-def _launch(python, env):
-    main_path = extract_main()
-    subprocess.Popen([python, main_path], env=env, creationflags=NO_WINDOW)
+def _find_bundled_browsers(base):
+    """Return the absolute ms-playwright folder path if it exists."""
+    cand = os.path.join(base, "ms-playwright")
+    return cand if os.path.isdir(cand) else None
 
 
 def main():
-    python = find_python()
-    if not python:
-        messagebox.showerror("Error",
-                             "Bundled Python not found.\nReinstall TrafficForge.")
-        return
-    env = get_env(python)
-    if chromium_installed():
-        _launch(python, env)
-    else:
-        InstallerWindow(python, env)
+    base = _exe_dir()
+
+    # 1. Decode embedded New_traffic.py
+    try:
+        script_bytes = base64.b64decode(MAIN_PY_B64)
+    except Exception as exc:
+        _msgbox("TrafficForge", f"Failed to decode embedded script:\n{exc}")
+        sys.exit(1)
+
+    # Write to a stable per-user location so the file path stays the
+    # same across runs (helps Windows Defender / SmartScreen heuristics).
+    work_dir = os.path.join(tempfile.gettempdir(), "TrafficForge")
+    os.makedirs(work_dir, exist_ok=True)
+    script_path = os.path.join(work_dir, "New_traffic.py")
+    try:
+        with open(script_path, "wb") as f:
+            f.write(script_bytes)
+    except Exception as exc:
+        _msgbox("TrafficForge", f"Cannot write script to disk:\n{exc}")
+        sys.exit(1)
+
+    # 2. Locate bundled Python + Chromium
+    py = _find_portable_python(base)
+    if not py:
+        _msgbox("TrafficForge",
+                f"Portable Python not found in:\n{base}\\portable_python\n\n"
+                "The installation appears corrupted. Please reinstall.")
+        sys.exit(1)
+
+    env = os.environ.copy()
+    browsers = _find_bundled_browsers(base)
+    if browsers:
+        env["PLAYWRIGHT_BROWSERS_PATH"] = browsers
+    # Make portable Python self-contained (ignore user site-packages)
+    env["PYTHONNOUSERSITE"] = "1"
+
+    # 3. Launch the real app
+    try:
+        # CREATE_NO_WINDOW so no console pops behind the Qt window
+        CREATE_NO_WINDOW = 0x08000000
+        subprocess.Popen(
+            [py, script_path],
+            env=env,
+            cwd=work_dir,
+            creationflags=CREATE_NO_WINDOW,
+            close_fds=True,
+        )
+    except Exception as exc:
+        _msgbox("TrafficForge", f"Failed to launch app:\n{exc}")
+        sys.exit(1)
 
 
 if __name__ == "__main__":

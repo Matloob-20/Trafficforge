@@ -8,33 +8,7 @@ pip install PyQt5 playwright PySocks
 playwright install chromium
 python trafficforge.py
 """
-import sys, os, json, uuid, asyncio, random, time, socket, struct, glob
-
-# ═══════════════════════════════════════════════════════
-#  BUNDLED CHROMIUM LOCATOR  (must run BEFORE playwright import)
-#  Sets PLAYWRIGHT_BROWSERS_PATH based on EXE location so we do
-#  NOT depend on a registry env var (which needs a reboot).
-# ═══════════════════════════════════════════════════════
-def _locate_bundled_browsers():
-    if getattr(sys, "frozen", False):
-        base = os.path.dirname(sys.executable)
-    else:
-        base = os.path.dirname(os.path.abspath(__file__))
-
-    # Walk up to 3 levels — covers EXE dir, parent (when launched
-    # by a bootstrap exe from a subfolder), and grandparent.
-    search_roots = [base, os.path.dirname(base), os.path.dirname(os.path.dirname(base))]
-    for root in search_roots:
-        candidate = os.path.join(root, "ms-playwright")
-        if os.path.isdir(candidate):
-            hits = glob.glob(os.path.join(candidate, "chromium*", "chrome-win*", "chrome.exe"))
-            if hits:
-                os.environ["PLAYWRIGHT_BROWSERS_PATH"] = os.path.abspath(candidate)
-                return os.path.abspath(candidate)
-    return None
-
-_BUNDLED_BROWSERS = _locate_bundled_browsers()
-
+import sys, os, json, uuid, asyncio, random, time, socket, struct
 from datetime import datetime, date
 from dataclasses import dataclass, field, asdict
 from typing import List, Optional, Dict
@@ -3547,47 +3521,8 @@ class Engine:
                            "--disable-infobars","--disable-extensions",
                            "--disable-web-security","--disable-features=IsolateOrigins",
                            "--disable-dev-shm-usage"]
-
-            # ── Locate bundled Chromium (works in both EXE and dev mode) ──
-            chromium_path = None
-
-            # 1. Check env var set by launcher (EXE mode)
-            if os.environ.get("PLAYWRIGHT_BROWSERS_PATH"):
-                browsers_root = os.environ["PLAYWRIGHT_BROWSERS_PATH"]
-                import glob
-                hits = glob.glob(os.path.join(browsers_root, "chromium*", "chrome-win*", "chrome.exe"))
-                if hits:
-                    chromium_path = hits[0]
-                    LOG.emit(f"Bundled Chromium found: {chromium_path}", "SYS")
-
-            # 2. Fallback: check next to EXE (portable install)
-            if not chromium_path:
-                exe_dir = os.path.dirname(sys.executable)
-                candidates = [
-                    os.path.join(exe_dir, "chromium", "chrome.exe"),
-                    os.path.join(exe_dir, "ms-playwright", "chromium-1223", "chrome-win64", "chrome.exe"),
-                ]
-                import glob
-                candidates += glob.glob(os.path.join(exe_dir, "ms-playwright", "chromium*", "chrome-win*", "chrome.exe"))
-                candidates += glob.glob(os.path.join(os.path.dirname(exe_dir), "ms-playwright", "chromium*", "chrome-win*", "chrome.exe"))
-                for c in candidates:
-                    if os.path.exists(c):
-                        chromium_path = c
-                        LOG.emit(f"Portable Chromium found: {chromium_path}", "SYS")
-                        break
-
-            # 3. Last resort: system playwright install
-            if not chromium_path:
-                LOG.emit("No bundled Chromium — using system playwright install", "WARN")
-
-            try:
-                launch_kwargs = {"headless": proj.headless, "args": launch_args}
-                if chromium_path:
-                    launch_kwargs["executable_path"] = chromium_path
-                browser = await pw.chromium.launch(**launch_kwargs)
-            except Exception as exc:
-                LOG.emit(f"Browser failed: {exc}", "ERROR")
-                return
+            try: browser=await pw.chromium.launch(headless=proj.headless, args=launch_args)
+            except Exception as exc: LOG.emit(f"Browser failed: {exc}","ERROR"); return
             LOG.emit("Browser ready ✓","OK")
             sem=asyncio.Semaphore(proj.workers)
 
